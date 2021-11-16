@@ -1,0 +1,168 @@
+@import "~office-ui-fabric-react/dist/sass/References.scss";
+
+.employee {
+  .error{
+    color: red;
+  }
+
+  .success{
+    color: green;
+  }
+
+  .gridHeading1 {
+
+    background-color: white;
+
+    font-size: medium;
+
+    @include ms-Grid-col;
+
+    @include ms-lg2;
+
+    @include ms-sm6;
+
+    @include ms-md4;
+
+    font-weight: bold;
+
+  }
+
+  .gridHeading2 {
+
+    background-color: white;
+
+    font-size: medium;
+
+    @include ms-Grid-col;
+
+    @include ms-lg10;
+
+    @include ms-sm6;
+
+    @include ms-md8;
+
+    font-weight: bold;
+
+  }
+
+  .grid {
+    @include ms-Grid;
+    background-color: lightgrey;
+  }
+  .gridRow {
+    @include ms-Grid-row;
+  }
+
+  .smallCol {
+    @include ms-Grid-col;
+    @include ms-lg2;
+    @include ms-sm6;
+    @include ms-md4;
+    color: black !important;
+    margin-top: 20px;
+  }
+  .smallColm {
+    @include ms-Grid-col;
+    @include ms-lg2;
+    @include ms-sm2;
+    @include ms-md2;
+    word-break: break-all;
+    color: black !important;
+    margin-top: 20px;
+  }
+  .largeCol {
+    @include ms-Grid-col;
+    @include ms-lg10;
+    @include ms-sm6;
+    @include ms-md8;
+    color: black ;
+    margin-top: 20px;
+  }
+  .validation {
+    color: red !important;
+  }
+  .container {
+    max-width: 700px;
+    margin: 0px auto;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2), 0 25px 50px 0 rgba(0, 0, 0, 0.1);
+  }
+
+  .formBg {
+    @include ms-Grid-row;
+    @include ms-fontColor-white;
+    background-color: lightgray;
+    padding: 20px;
+  }
+  .row {
+    @include ms-Grid-row;
+    @include ms-fontColor-white;
+    background-color: darkgray;
+    padding: 20px;
+  }
+
+  .column {
+    @include ms-Grid-col;
+    @include ms-lg10;
+    @include ms-xl8;
+    @include ms-xlPush2;
+    @include ms-lgPush1;
+  }
+
+  .title {
+    @include ms-font-xl;
+    color: black;
+    font-weight: bold;
+  }
+
+  .subTitle {
+    @include ms-font-l;
+    @include ms-fontColor-white;
+  }
+
+  .description {
+    @include ms-font-l;
+    @include ms-fontColor-white;
+  }
+
+  .dropdown {
+    width: 60%;
+    margin-left: 10px;
+  }
+
+  .button {
+    // Our button
+    text-decoration: none;
+    height: 32px;
+
+    // Primary Button
+    min-width: 80px;
+    background-color: $ms-color-themePrimary;
+    border-color: $ms-color-themePrimary;
+    color: $ms-color-white;
+
+    // Basic Button
+    outline: transparent;
+    position: relative;
+    font-family: "Segoe UI WestEuropean", "Segoe UI", -apple-system,
+      BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    font-size: $ms-font-size-m;
+    font-weight: $ms-font-weight-regular;
+    border-width: 0;
+    text-align: center;
+    cursor: pointer;
+    display: inline-block;
+    padding: 0 16px;
+
+    .label {
+      font-weight: $ms-font-weight-semibold;
+      font-size: $ms-font-size-m;
+      height: 32px;
+      line-height: 32px;
+      margin: 0 4px;
+      vertical-align: top;
+      display: inline-block;
+    }
+
+  }
+}
