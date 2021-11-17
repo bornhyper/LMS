@@ -81,13 +81,5 @@ export class SPOperations{
                 
             });
         });
-    }
-
-
-
-    public DeleteItemHolidayList(context:WebPartContext, listTitle:string){
-
-         
-    }
-    
+    }    
 }

@@ -3,19 +3,18 @@ import styles from './Employee.module.scss';
 import { IEmployeeProps } from './IEmployeeProps';
 import { IEmployeeState } from './IEmployeeState';
 import { escape } from '@microsoft/sp-lodash-subset';
+import { AadHttpClient, HttpClientResponse } from '@microsoft/sp-http';
 import { SPOperations } from "../Services/SPServices";
 import { TextField } from '@fluentui/react/lib/TextField';
 import { Dropdown, IDropdownOption, Pivot, PivotItem, PrimaryButton, DefaultButton, List, IChoiceGroupOption, ChoiceGroup, format } from "office-ui-fabric-react";
 import { Label } from "@fluentui/react"
-import * as jquery from "jquery";
-import { PeoplePicker, PrincipalType } from "@pnp/spfx-controls-react/lib/PeoplePicker";
-import { result, xor } from 'lodash';
 
 const regularExpression = RegExp(/^[a-zA-Z0-9]+@[a-zA-Z0-9]+\.[A-Za-z]+$/);
 export default class Employee extends React.Component<IEmployeeProps, IEmployeeState, {}> {
   public _spOps: SPOperations;
   public selectedListTitle: string;
   public selectedLeaveSettings: string;
+  //public static HolidaysNameExport: IDropdownOption[];
 
   constructor(props: IEmployeeProps) {
     super(props);
@@ -49,6 +48,8 @@ export default class Employee extends React.Component<IEmployeeProps, IEmployeeS
 
       leaveBalance: [{ id: "", text: "" }],
 
+      publicHolidays:[""],
+
       submitSuccess:""
     };
 
@@ -56,11 +57,24 @@ export default class Employee extends React.Component<IEmployeeProps, IEmployeeS
 
     //console.log(this.state);
 
+    // this._spOps.GetAllHolidayList(this.props.context).then((result: IDropdownOption[]) => {
+    //   this.setState({ listTitle: result })
+    //   console.log(this.state.listTitle)
+    //   Employee.HolidaysNameExport=this.state.listTitle;
+
+    //   console.log(Employee.HolidaysNameExport,'1');
+    // });
+
   }
 
   public componentDidMount() {
+
     this._spOps.GetAllHolidayList(this.props.context).then((result: IDropdownOption[]) => {
       this.setState({ listTitle: result })
+      console.log(this.state.listTitle)
+      //Employee.HolidaysNameExport=this.state.listTitle;
+
+      //console.log(Employee.HolidaysNameExport,'1');
     });
 
     this._spOps.GetAllLeaveSettings(this.props.context).then((result: IChoiceGroupOption[]) => {
@@ -102,15 +116,32 @@ export default class Employee extends React.Component<IEmployeeProps, IEmployeeS
 
   public getDayDifference(sDate: string, eDate: string) {
     var date1 = new Date(sDate);
+    var day1=date1.getUTCDay();
     var date2 = new Date(eDate);
-    const diffTime = Math.abs(date1.getDate() - date2.getDate()) + 1;
+    var diffTime = Math.abs(date1.getDate() - date2.getDate()) + 1;
+    console.log(diffTime + "days");
+    var weekdays=2*Math.floor(diffTime/7)
+    var additional= Math.floor(diffTime % 7);
+    diffTime=diffTime-weekdays
+    if(day1+additional-1>=7)
+      diffTime=diffTime-2
+    console.log(diffTime + "days");
+    
+    for(let i=date1;i<=date2;i.setDate(i.getDate()+1))
+    {
+      //console.log(i.getDate());
+      let tempDate=i.getFullYear() + '-' + (i.getMonth() + 1) + '-' + i.getDate()
+      if(!(i.getUTCDay()==0 || i.getUTCDay()==6) && this.state.publicHolidays.indexOf(tempDate)!=-1)
+        diffTime--;
+    }
+
     console.log(diffTime + "days");
     return diffTime;
   }
 
-  public leaveBalanceDaysCheck()
+  public leaveBalanceDaysCheck(tempDays)
   {
-    let days=this.getDayDifference(this.state.sDate, this.state.eDate)
+    let days=tempDays;
     let index=0;
     let isTrue=false;
     this.state.leaveSettings.map((item)=>{
@@ -136,7 +167,8 @@ export default class Employee extends React.Component<IEmployeeProps, IEmployeeS
     //console.log(this.state);
     if (this.isValid()) {
       //console.log(this.leaveBalanceDaysCheck());
-      if(this.leaveBalanceDaysCheck())
+      var tempDays=this.getDayDifference(this.state.sDate, this.state.eDate)
+      if(this.leaveBalanceDaysCheck(tempDays))
       {
         //console.log("valid form");
         let formInfo = {
@@ -154,7 +186,7 @@ export default class Employee extends React.Component<IEmployeeProps, IEmployeeS
   
           cc: this.state.emailCc,
   
-          days: this.getDayDifference(this.state.sDate, this.state.eDate)
+          days: tempDays
         }
         //console.log(formInfo);
         fetch("https://contosofunctions.azurewebsites.net/api/postitem/", {
@@ -178,10 +210,19 @@ export default class Employee extends React.Component<IEmployeeProps, IEmployeeS
 
   public render(): React.ReactElement<IEmployeeProps> {
 
+    // this.context.aadHttpClientFactory.getClient('https://tenant.onmicrosoft.com/aca97a6f-dc1b-4d93-b126-c7ea317eb49c')
+    // .then((client: AadHttpClient): void =>{
+    //   fetch("https://contosofunctions.azurewebsites.net/api/getitem/")
+    //   .then((res) => res.json())
+    //   .then((json) => {
+    //     this.setState({ dataBaseExtracts: json });
+    //   });
+    // })
+
     fetch("https://contosofunctions.azurewebsites.net/api/getitem/")
       .then((res) => res.json())
       .then((json) => {
-        this.setState({ dataBaseExtracts: json });
+        this.setState({ dataBaseExtracts: json })
       });
 
     const ChangeLeaveType = (ev: React.FormEvent<HTMLInputElement>, option: IChoiceGroupOption) => {
@@ -190,14 +231,35 @@ export default class Employee extends React.Component<IEmployeeProps, IEmployeeS
     }
 
     const changeStartDate = (e) => {
-      this.setState({ sDate: e.target.value, errorStartDate: "" })
+      this.setState({ sDate: e.target.value},()=>{
+        var day=new Date(this.state.sDate).getUTCDay();
+        console.log(day)
+        if(day==6 || day==0){
+          this.setState({errorStartDate:"Start Date can't be assigned to Weekends"});
+        }
+        else if(this.state.publicHolidays.indexOf(this.state.sDate)!=-1){
+          this.setState({errorStartDate:"Start Date can't be assigned to public Holidays"});
+        }
+        else
+        this.setState({errorStartDate:""});
+      })
       if (this.state.eDate != "") {
         this.setState({ errorEndDate: "Start Date Changed. please update the End Date" })
       }
     }
 
     const changeEndDate = (e) => {
-      this.setState({ eDate: e.target.value, errorEndDate: "" })
+      this.setState({ eDate: e.target.value, errorEndDate: "" },()=>{
+        var day=new Date(this.state.eDate).getUTCDay();
+        if(day==6 || day==0){
+          this.setState({errorEndDate:"End Date can't be assigned to Weekends"});
+        }
+        else if(this.state.publicHolidays.indexOf(this.state.eDate)!=-1){
+          this.setState({errorEndDate:"End Date can't be assigned to public Holidays"});
+        }
+        else
+        this.setState({errorEndDate:""});
+      })
     }
 
     const changeReason = (e) => {
@@ -223,9 +285,9 @@ export default class Employee extends React.Component<IEmployeeProps, IEmployeeS
     }
 
     const checkUser = escape(this.props.userid);
-    const LeaveType = this.state.leaveSettings.map(item => <p>{item.text}</p>);
-    const printHolidayName = this.state.listTitle.map(item => <p>{item.text}</p>);
-    const printHolidayDate = this.state.listTitle.map(item => <p>{item.key.toString().substr(0, 10)}</p>);
+    // const LeaveType = this.state.leaveSettings.map(item => <p>{item.text}</p>);
+    // const printHolidayName = this.state.listTitle.map(item => <p>{item.text}</p>);
+    // const printHolidayDate = this.state.listTitle.map(item => <p>{item.key.toString().substr(0, 10)}</p>);
 
     var startDateHistory: JSX.Element[] = [], endDateHistory: JSX.Element[] = [], typeHistory: JSX.Element[] = [], daysHistory: JSX.Element[] = [], ccHistory: JSX.Element[] = [], commentHistory: JSX.Element[] = [], statusHistory: JSX.Element[] = [];
 
@@ -246,6 +308,11 @@ export default class Employee extends React.Component<IEmployeeProps, IEmployeeS
       this.state.leaveBalance.push({ id: item.text, text: item.key });
     })
 
+    this.state.listTitle.map((item) => {
+      // console.log(item)
+      this.state.publicHolidays.push(item.key.toString().substr(0, 10));
+    })
+
     if (this.state.dataBaseExtracts.length) {
       this.state.dataBaseExtracts.map((item) => {
         if (item.user_id === checkUser.toString()) {
@@ -261,7 +328,7 @@ export default class Employee extends React.Component<IEmployeeProps, IEmployeeS
       });
     }
 
-    const LeaveDays = this.state.leaveBalance.slice(0,this.state.leaveSettings.length+1).map((item) => <p>{item.text}</p>);
+    // const LeaveDays = this.state.leaveBalance.slice(0,this.state.leaveSettings.length+1).map((item) => <p>{item.text}</p>);
 
     return (
       <div className={styles.employee}>
@@ -276,7 +343,7 @@ export default class Employee extends React.Component<IEmployeeProps, IEmployeeS
         </div>
         <div className={styles.container}>
           <Pivot aria-label="Basic Pivot Example" >
-            <PivotItem
+            {/* <PivotItem
               headerText="Public Holidays"
               headerButtonProps={{
                 'data-order': '1',
@@ -301,9 +368,9 @@ export default class Employee extends React.Component<IEmployeeProps, IEmployeeS
                 </div>
               </div>
 
-            </PivotItem>
+            </PivotItem> */}
 
-            <PivotItem
+            {/* <PivotItem
 
               headerText="Holidays"
 
@@ -320,9 +387,6 @@ export default class Employee extends React.Component<IEmployeeProps, IEmployeeS
                   <div className={styles.gridHeading2}>
                     Total Number of Days
                   </div>
-                  {/* <div className={styles.largeCol}>
-                    Remaining
-                  </div> */}
                   <div className={styles.smallCol}>
                     {LeaveType}
                   </div>
@@ -331,7 +395,7 @@ export default class Employee extends React.Component<IEmployeeProps, IEmployeeS
                   </div>
                 </div>
               </div>
-            </PivotItem>
+            </PivotItem> */}
 
             <PivotItem headerText="Create new">
 

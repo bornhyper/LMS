@@ -6,6 +6,16 @@
     "version": "1.0.0.0",
     "includeClientSideAssets": true,
     "isDomainIsolated": false,
+    "webApiPermissionRequests": [
+      {
+        "resource": "User Details Custom API for SPFx",
+        "scope": "user_impersonation"
+      },
+      {
+        "resource": "Windows Azure Active Directory",
+        "scope": "User.Read"
+      }
+    ],
     "developer": {
       "name": "",
       "websiteUrl": "",

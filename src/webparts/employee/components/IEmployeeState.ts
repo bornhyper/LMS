@@ -28,6 +28,7 @@ export interface IEmployeeState{
         status: string,
         days: string}],
     leaveBalance: [{ id: string, text: string }]
+    publicHolidays: [string]
 
     submitSuccess:string;
 }
